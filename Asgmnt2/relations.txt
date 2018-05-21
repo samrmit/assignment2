@@ -1,0 +1,14 @@
+Alice,Sam,friends
+Alice,James,couple
+Alice,Mike,parent
+James,Mike,parent
+Sam,Anne,couple
+Sam,Marcus,parent
+Anne,Marcus,parent
+Sam,Steve,parent
+Anne,Steve,parent
+Ronald,Ben,friends
+Ben,Marie,friends
+Anne,Marie,friends
+Anne,James,friends
+Steve,Mike,friends

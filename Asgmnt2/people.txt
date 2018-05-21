@@ -1,0 +1,10 @@
+Alice,alice.jpg,Accountant at RMIT,F,44,VIC
+James,jms.png,Lawyer,M,48,VIC
+Mike,mk.jpg,Student,M,10,VIC
+Ronald,ron.gif,Carpenter,M,28,NSW
+Ben,ben.png,School Teacher,M,36,WA
+Marie,,,F,34,WA
+Sam,jsm.jpg,,F,44,VIC
+Anne,an.jpg,,F,37,VIC
+Marcus,,,M,2,VIC
+Steve,st.jpg,,M,12,VIC
