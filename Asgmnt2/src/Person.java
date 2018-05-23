@@ -1,18 +1,15 @@
 /**
  * Class: Person
  * Author: s3685754
- * Date: 25th March 2018
- * Version 1
+ * Date: 21st May 2018
+ * Version 2
  *
- * This class in the highest level entity in of Network user. All other user classes are inherited from this class.
+ * This class in the highest level abstract entity in of Network user. All other user classes are inherited from this class.
  */
 
 import java.util.*;
 
 public abstract class Person {
-	
-	public static int adultMinAge =17;
-
     private String name;
     private int age;
     private String sex;
@@ -38,7 +35,6 @@ public abstract class Person {
     public boolean addedTo(Person p1) throws NotToBeFriendsException,TooYoungException {
 
         if (isFriendOf(p1)) {
-            System.out.println("Cannot added because " +p1.name + " is already a friend.");
             return false;
         } else {
         	friend_list.add(p1); 
@@ -53,11 +49,10 @@ public abstract class Person {
         if (isFriendOf(p1)) {
       	
         	friend_list.remove(p1);
-            System.out.println(p1.name + " is removed as a friend from " + this.name);
             return true;
 
         } else {
-            System.out.println(p1.name + " is not a friend of " + this.name);
+            //System.out.println(p1.name + " is not a friend of " + this.name);
             return false;
         }
 
@@ -66,11 +61,11 @@ public abstract class Person {
     /* this method shows details of user.
      */
     public void viewDetails() {
-        System.out.println("Name: " + name + "\nAge: " + age + "\nImage: " + image + "\nStatus: " + status +
-                "\nFriends list: " + showFriends());
+/*        System.out.println("Name: " + name + "\nAge: " + age + "\nImage: " + image + "\nStatus: " + status +
+                "\nFriends list: " + showFriends());*/
     }
 
-    /* 5 accessor methods and 2 mutator methods are included*/
+    /* accessor methods and mutator methods are included*/
 
     public String getName() {
         return name;
@@ -78,6 +73,10 @@ public abstract class Person {
 
     public int getAge() {
         return age;
+    }
+    
+    public String getSex() {
+        return sex;
     }
 
     public String getImage() {
@@ -110,6 +109,10 @@ public abstract class Person {
     public void setStatus(String newStatus) {
         status = newStatus;
     }
+    
+    public void setSex(String newSSex) {
+        sex = newSSex;
+    }
 
     public boolean isFriendOf(Person P) {  //Checking the given person is a friend of current user by name
         //List<String> list = Arrays.asList(friend_list);
@@ -133,12 +136,6 @@ public abstract class Person {
         return longer;
     }
     
-/*    public String[] push(Person array, Person newItem) { // adding an item to an existing array
-        String[] longer = new String[array.length + 1];
-        System.arraycopy(array, 0, longer, 0, array.length);
-        longer[array.length] = newItem;
-        return longer;
-    }*/
 
     public String[] remove(String[] array, String delItem) {
         for (int i = 0; i < array.length; i++) {

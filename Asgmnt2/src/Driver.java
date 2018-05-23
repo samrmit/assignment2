@@ -2,8 +2,8 @@
 /**
  * Class: Driver
  * Author: s3682248
- * Date: 18th May 2018
- * Version 1
+ * Date: 21st May 2018
+ * Version 2
  *
  * This class is used to control the flow of the program run and interact with the end user.
  * The class assumes user names are unique.
@@ -70,6 +70,9 @@ public class Driver extends Application {
 		loadDefaultData();
 		primaryStage.setTitle("Mininet Application");
 
+		FlowPane pane = new FlowPane(Orientation.VERTICAL, 5, 10);// hGap=5,vGap = 5
+		pane.setPadding(new Insets(11, 12, 13, 14));
+
 		GridPane grid = new GridPane();
 		grid.setPadding(new Insets(10, 10, 10, 10));
 		grid.setVgap(8);
@@ -78,11 +81,17 @@ public class Driver extends Application {
 		Button mbtnAddPsn = new Button("Add New Person");
 		mbtnAddPsn.setOnAction(e -> window.setScene(scene2));
 		GridPane.setConstraints(mbtnAddPsn, 0, 0);
-		Button mbtnDelPsn = new Button("Delete Selected Person from Network");
-		mbtnDelPsn.setOnAction(e -> deletePerson());
+
+		Button mbtnClose = new Button("Exit Application");
+		mbtnClose.setOnAction(e -> window.close());
+		GridPane.setConstraints(mbtnClose, 1, 0);
 
 		Label lbSelect = new Label("Select a person");
 		GridPane.setConstraints(lbSelect, 0, 1);
+
+		Button mbtnDelPsn = new Button("Delete Selected Person from Network");
+		mbtnDelPsn.setOnAction(e -> deletePerson());
+
 		choiceBox = new ChoiceBox<>();
 
 		updatePersonList();
@@ -91,13 +100,12 @@ public class Driver extends Application {
 		choiceBox.setOnAction(e -> getChoice());
 
 		Button mbtnAddFrnd = new Button("Make Below Person A Friend");
-
 		mbtnAddFrnd.setOnAction(e -> addNewFriend());
 
-		grid.getChildren().addAll(mbtnAddPsn, lbSelect, choiceBox, mbtnAddFrnd);
+		Button mbtnCheckFriends = new Button("Check selected are friends");
+		mbtnCheckFriends.setOnAction(e -> checkSelectedAreFriends());
 
-		FlowPane pane = new FlowPane(Orientation.VERTICAL, 5, 10);// hGap=5,vGap = 5
-		pane.setPadding(new Insets(11, 12, 13, 14));
+		grid.getChildren().addAll(mbtnAddPsn, lbSelect, choiceBox, mbtnAddFrnd, mbtnClose);
 
 		pane.getChildren().add(grid);
 
@@ -106,6 +114,7 @@ public class Driver extends Application {
 
 		pane.getChildren().add(mbtnDelPsn);
 		pane.getChildren().add(mbtnAddFrnd);
+		pane.getChildren().add(mbtnCheckFriends);
 
 		choiceBoxFr = new ChoiceBox<>();
 		pane.getChildren().add(choiceBoxFr);
@@ -152,72 +161,139 @@ public class Driver extends Application {
 
 	}
 
+	/*
+	 * this method handles the actions required when change the person from the
+	 * current person drop down.
+	 */
 	private void getChoice() {
+		
+		lbSystemInfo.setText("");
 
-		curPerson = getPerson(choiceBox.getValue());
-		info = "Name: " + curPerson.getName() + "\n\r" + "Age: " + String.valueOf(curPerson.getAge()) + "\n\r"
-				+ "Status: " + curPerson.getStatus() + "\n\r" + "State: " + curPerson.getState() + "\n\r" + "Friends: "
-				+ curPerson.getFriendList() + "\n\r";
+		if (choiceBox.getValue() != null) {
+			curPerson = getPerson(choiceBox.getValue());
+			info = "Name: " + curPerson.getName() + "\n\r" + "Age: " + String.valueOf(curPerson.getAge()) + "\n\r"
+					+ "Status: " + curPerson.getStatus() + "\n\r" + "State: " + curPerson.getState() + "\n\r"
+					+ "Friends: " + curPerson.getFriendList() + "\n\r";
 
-		if (curPerson instanceof Adult) {
-			info = info + "Childeren: " + ((Adult) curPerson).showChildren() + "\n\r";
+			if (curPerson instanceof Adult) {
+				info = info + "Childeren: " + ((Adult) curPerson).showChildren() + "\n\r" + "Partner: ";
+				if (((Adult) curPerson).getPartner() != null) {
+					info = info + "Childeren: " + ((Adult) curPerson).getPartner().getName() + "\n\r" + "Partner: ";
+				}
+
+			}
+
+			if (curPerson instanceof Child) {
+				info = info + "Parent 1 : " + ((Child) curPerson).getParentName1() + "\n\r";
+				info = info + "Parent 2 : " + ((Child) curPerson).getParentName2() + "\n\r";
+			}
+
+			lbPersonInfo.setText(info);
+
+			choiceBoxFr.getItems().clear();
+
+			for (int i = 0; i < allProfiles.size(); i++) {
+				if (curPerson != allProfiles.get(i)) {
+					choiceBoxFr.getItems().add(allProfiles.get(i).getName());
+				}
+
+			}
 		}
 
-		if (curPerson instanceof Dependent) {
-			info = info + "Parent 1 : " + ((Dependent) curPerson).getParentName1() + "\n\r";
-			info = info + "Parent 2 : " + ((Dependent) curPerson).getParentName2() + "\n\r";
+	}
+
+	/*
+	 * this method check two persons are friends.
+	 */
+	private void checkSelectedAreFriends() {
+
+		if (choiceBoxFr.getValue() == null || choiceBox.getValue() == null) {
+			lbSystemInfo.setText("Please select a person in each dropdowns.");
+		} else {
+			if (getPerson(choiceBox.getValue()).isFriendOf(getPerson(choiceBoxFr.getValue()))) {
+				lbSystemInfo.setText("Yes, They are friends.");
+
+			} else {
+				lbSystemInfo.setText("No, they are not friends.");
+
+			}
 		}
 
-		lbPersonInfo.setText(info);
+	}
 
-		choiceBoxFr.getItems().clear();
+	/*
+	 * this method delete a person from network.
+	 */
+	private void deletePerson() {
 
-		for (int i = 0; i < allProfiles.size(); i++) {
-			if (curPerson != allProfiles.get(i)) {
-				choiceBoxFr.getItems().add(allProfiles.get(i).getName());
+		if (choiceBox.getValue() == null) {
+			lbSystemInfo.setText("Please select a person to delete.");
+		} else {
+			// Some action to implement to remove the selected person from friend lists
+			// before delete
+			try {
+			//allProfiles.remove(getPerson(choiceBox.getValue()));
+			//getChoice();
+			lbSystemInfo.setText("Successfully deleted from network.");
+			}catch(Exception e) {
+				lbSystemInfo.setText("Error: "+e.getMessage());
 			}
 
 		}
 
 	}
 
-	private void deletePerson() {
-		
-		if (choiceBox.getValue() == null) {
-			lbSystemInfo.setText("Please select a person to delete.");
-		} else {
-			// Some action to implement to remove the selected person from friend lists
-			// before delete
-			// allProfiles.remove(getPerson(choiceBox.getValue()));
-			lbSystemInfo.setText("This action is not yet implemented.");
-		}
-
-	}
-
+	/*
+	 * this method adds a new person to the network.
+	 */
 	private void addNewPerson() {
 
 		// this function is not completed and need to do age check and other validations
-		try {
-			Person P = new Adult(newName.getText(), Integer.parseInt(newAge.getText()), "pt1.jpg", "", "VIC", "M",
-					new ArrayList<Person>(), new ArrayList<Person>());
-			allProfiles.add(P);
-			updatePersonList();
-			lbSystemInfoNewPerson.setText(newName.getText() + " added to the network.");
-		} catch (Exception e) {
-			lbSystemInfoNewPerson.setText("Error: " + e.getMessage());
+
+		if (getPerson(newName.getText()) != null) {
+			lbSystemInfoNewPerson.setText("Error: Person with the same name is already exist. Use Another name.");
+
+		} else {
+			
+			try {
+				
+				Person P = new Adult(newName.getText(), Integer.parseInt(newAge.getText()), "pt1.jpg", "", "VIC", "M",
+						new ArrayList<Person>(), new ArrayList<Person>());
+				allProfiles.add(P);
+				updatePersonList();
+				lbSystemInfoNewPerson.setText(newName.getText() + " added to the network.");
+			} catch (Exception e) {
+				lbSystemInfoNewPerson.setText("Error: " + e.getMessage());
+			}
+			
 		}
 
 	}
 
+	/*
+	 * this method handles adding a friend actions for the selected user.
+	 */
 	private void addNewFriend() {
 
-		if (choiceBoxFr.getValue() == null) {
-			lbSystemInfo.setText("Please select a person from above check box.");
+		if (choiceBoxFr.getValue() == null || choiceBoxFr.getValue() == null) {
+			lbSystemInfo.setText("Please select a person in each check box.");
 		} else {
 
 			try {
 				curPerson.addedTo(getPerson(choiceBoxFr.getValue()));
-				lbSystemInfo.setText("Congratulations: " + choiceBoxFr.getValue() + " was added as a Friend: ");
+				if (getPerson(choiceBoxFr.getValue()).isFriendOf(curPerson) == false) {
+					if(getPerson(choiceBoxFr.getValue()).addedTo(curPerson)) {
+						lbSystemInfo.setText("Congratulations: " + choiceBoxFr.getValue() + " was added as a Friend: ");
+					}else {
+						lbSystemInfo.setText("Error: Cannot be added due to some unknown reason.");
+					}
+				}else {
+					
+					lbSystemInfo.setText("Error: They are already friends. So cannot be added again. ");
+					
+				}
+
+				
 				getChoice();
 
 			} catch (NotToBeFriendsException nbe) {
@@ -230,333 +306,12 @@ public class Driver extends Application {
 	}
 
 	/*
-	 * this method triggers the initial step of the program run
-	 */
-	private void topLevelHandler() {
-
-		int opt1 = getMainMenu(sc);
-		menuAction(opt1);
-
-	}
-
-	/*
-	 * this methods handle top level menu actions.
-	 */
-	private void menuAction(int option) {
-
-		switch (option) {
-		case 1: { // list everyone
-			displayNet();
-			topLevelHandler();
-			break;
-		}
-		case 2: { // select a person
-
-			selectPerson(option);
-			break;
-		}
-		case 3: { // Check given two users are friends
-			checkFriends(option);
-			break;
-		}
-
-		case 4: { // exit program
-			System.out.println("\nYou quit the MiniNet");
-			System.exit(0);
-		}
-		}
-	}
-
-	/*
-	 * this method handles second level menu actions (after selecting a user).
-	 */
-	private void subMenuAction() {
-		
-		System.out.print("\nCurrent user: " + curPerson.getName());
-		int choice = getSubMenu(sc);
-		if (choice == 1) {
-			System.out.println("\n--------------------------");
-			curPerson.viewDetails();
-			System.out.println("\n--------------------------");
-			subMenuAction();
-
-		} else if (choice == 2) { // Add a friend
-
-			try {
-				addFriend();
-			} catch (Exception e) {
-				System.err.println(e.getMessage());
-
-			}
-
-		} else if (choice == 3) { // Delete a friend
-			deleteFriend();
-
-		} else if (choice == 4) { // Show details of friend
-			showFriendDetails();
-
-		} else if (choice == 5) { // Update Status
-			updateStatus();
-
-		} else if (choice == 6) { // Update Image
-			updateImage();
-
-		} else if (choice == 7) { // go to top menu
-			topLevelHandler();
-
-		} else if (choice == 8) { // exit program
-			menuAction(4);
-		}
-		
-	}
-
-	/*
-	 * this method handles adding a friend actions for the selected user.
-	 */
-	private void addFriend() {
-		displayNet();
-		System.out.println("Select a name you want to make friend with " + curPerson.getName());
-		String nameAdd = sc.next();
-
-		// Person newPerson1 = getPerson(nameAdd);
-
-		if (curPerson == getPerson(nameAdd)) {
-			System.out.println("You must select a person other than " + curPerson.getName());
-			subMenuAction();
-		}
-
-		if (getPerson(nameAdd) != null) {
-
-			try {
-				curPerson.addedTo(getPerson(nameAdd));
-			} catch (NotToBeFriendsException nbe) {
-			} catch (TooYoungException tye) {
-			}
-
-			System.out.println("Current friends of " + curPerson.getName());
-			System.out.println(curPerson.showFriends());
-
-			subMenuAction();
-
-		} else {
-			System.out.println("Sorry, " + nameAdd + " is not a valid network user. Enter a name from below list.");
-			subMenuAction();
-
-		}
-
-	}
-
-	/*
-	 * this method handles removing a friend actions for the selected user.
-	 */
-	private void deleteFriend() {
-
-		System.out.println("friends of " + curPerson.getName() + " : " + curPerson.showFriends());
-		System.out.println("Enter the name of the friend you want to remove ");
-		String nameDel = sc.next();
-
-		if (curPerson == getPerson(nameDel)) {
-			System.out.println("You must select a person other than " + curPerson.getName());
-			subMenuAction();
-		}
-
-		if (getPerson(nameDel) != null) {
-
-			curPerson.deletedFrom(getPerson(nameDel));
-
-			/*
-			 * if (curPerson.deletedFrom(newPerson2)) { updateAllProfilesList(curPerson);
-			 * updateAllProfilesList(newPerson2); }
-			 */
-
-			System.out.println("Current friends of " + curPerson.getName());
-			System.out.println(curPerson.showFriends());
-			subMenuAction();
-
-		} else {
-			System.out.println("Sorry, " + nameDel + " is not a valid network user.");
-			subMenuAction();
-		}
-	}
-
-	/*
 	 * this method updates current user status.
 	 */
 	private void updateStatus() {
-		System.out.println("Enter the new status for " + curPerson.getName());
 		String newStatus = sc.next();
 		curPerson.setStatus(newStatus);
-		// updateAllProfilesList(curPerson);
-		subMenuAction();
 
-	}
-
-	/*
-	 * this method updates current user image.
-	 */
-	private void updateImage() {
-		System.out.println("Enter the new image name for " + curPerson.getName());
-		String newImage = sc.next();
-		curPerson.setImage(newImage);
-		// updateAllProfilesList(curPerson);
-		subMenuAction();
-
-	}
-
-	private void showFriendDetails() {
-		System.out.println("Friends of " + curPerson.getName() + " : " + curPerson.showFriends());
-		System.out.println("Enter a friend's name to get details");
-		String nameLook = sc.next();
-
-		Person newPerson3 = getPerson(nameLook);
-
-		if (newPerson3 != null) {
-			if (curPerson.isFriendOf(newPerson3)) {
-				System.out.println("\n--------------------------");
-				newPerson3.viewDetails();
-				System.out.println("\n--------------------------");
-			} else {
-				System.out.println("Entered user is not a friend of " + curPerson.getName());
-			}
-		} else {
-			System.out.println("Not a valid user.");
-		}
-		subMenuAction();
-	}
-
-	/*
-	 * this method lists all users in the network.
-	 */
-	private void displayNet() {
-		System.out.println("All Profiles\n====================" + this.allProfiles.size());
-
-		for (int i = 0; i < allProfiles.size(); i++) {
-			String userType = null;
-
-			if (allProfiles.get(i) instanceof Adult) {
-				userType = "Adult";
-			} else {
-				userType = "Dependant";
-			}
-
-			System.out.println("Name: " + allProfiles.get(i).getName() + " (Type: " + userType + " )");
-		}
-	}
-
-	/*
-	 * this method lists all users in the network.
-	 */
-	private void checkFriends(int option) {
-		displayNet();
-		System.out.println("Enter two names (you will be prompted twice to enter two names) :");
-		System.out.println("Enter name of first user :");
-		String f1 = sc.next();
-		Person P1 = getPerson(f1);
-
-		if (P1 != null) {
-			System.out.println("Enter name of second user :");
-			String f2 = sc.next();
-			Person P2 = getPerson(f2);
-			if (P2 != null) {
-
-				if (P1.isFriendOf(P2)) {
-					System.out.println(P1.getName() + " and " + P2.getName() + " are friends.");
-				} else {
-					System.out.println(P1.getName() + " and " + P2.getName() + " are not friends.");
-
-				}
-				topLevelHandler();
-			} else {
-				System.out.println("Invalid name :");
-				menuAction(option);
-			}
-
-		} else {
-			System.out.println("Invalid name :");
-			menuAction(option);
-		}
-
-	}
-
-	/*
-	 * this method select a user from the network based on the entered name.
-	 */
-	private void selectPerson(int option) {
-		displayNet();
-		System.out.println("Select a person by entering a name from above list:");
-		String name = sc.next();
-		curPerson = getPerson(name);
-
-		if (curPerson != null) {
-			System.out.println("You selected " + curPerson.getName());
-			subMenuAction();
-
-		} else {
-			System.out.println("Invalid name:");
-			menuAction(option);
-
-		}
-	}
-
-	/*
-	 * this method lists main menu options and get user entries.
-	 */
-	private static int getMainMenu(Scanner sc) {
-		int opt1 = 0;
-		boolean done1 = false;
-		String mainMenu[] = { "\nMiniNet Menu", "================================= ", "1. List everyone",
-				"2. Select a person (Sub menu will appear after selecting a Person))",
-				"3. Check given two users are friends ", "4. Exit" };
-
-		for (int i = 0; i < mainMenu.length; i++)
-			System.out.println(mainMenu[i]);
-		System.out.print("\nEnter an option from 1,2,3 and 4: ");
-
-		do {
-			try {
-				opt1 = sc.nextInt();
-				if (opt1 <= 0 || opt1 > 4)
-					System.out.print("\nInvalid input. Your option must be between 1-4.\nEnter an option: ");
-				else
-					done1 = true;
-			} catch (InputMismatchException ex) {
-				System.out.print("\nInvalid input. Your option must be an Integer. \nEnter an option: ");
-				sc.nextLine();
-			}
-		} while (!done1);
-
-		return opt1;
-	}
-
-	/*
-	 * this method lists sub menu options and get user entries.
-	 */
-	private static int getSubMenu(Scanner sc) {
-		int opt2 = 0;
-		boolean done1 = false;
-
-		String menu[] = { "\nMiniNet Sub-Menu", "=====================", "1. Show user details", "2. Add a friend",
-				"3. Unfriend a friend ", "4. Show selected friend's details", "5. Update Status", "6. Update image",
-				"7. Go to main menu", "8. Exit" };
-
-		for (int i = 0; i < menu.length; i++)
-			System.out.println(menu[i]);
-		System.out.print("\nEnter an option from 1 to 8: ");
-
-		do {
-			try {
-				opt2 = sc.nextInt();
-				if (opt2 <= 0 || opt2 > 8)
-					System.out.print("\nInvalid input. Your option must be between 1-8.\nEnter an option: ");
-				else
-					done1 = true;
-			} catch (InputMismatchException ex) {
-				System.out.print("\nInvalid input. Your option must be an Integer. \nEnter an option: ");
-				sc.nextLine();
-			}
-		} while (!done1);
-
-		return opt2;
 	}
 
 	/*
@@ -571,7 +326,6 @@ public class Driver extends Application {
 		LoadData.loadInitData();
 		String[][] people = LoadData.peopleArray;
 		String[][] relations = LoadData.relationsArray;
-		System.out.print(Arrays.deepToString(relations));
 
 		// creating Adults
 		for (int r = 0; r < people.length; r++) {
@@ -582,7 +336,7 @@ public class Driver extends Application {
 			int age = Integer.parseInt(people[r][4]);
 			String state = people[r][5];
 
-			if (age >= Person.adultMinAge) {
+			if (age >= Adult.ADULT_MIN_AGE) {
 
 				Person P = new Adult(name, age, photo, status, state, sex, new ArrayList<Person>(),
 						new ArrayList<Person>());
@@ -594,28 +348,40 @@ public class Driver extends Application {
 
 		this.createDependents(people, relations);
 
-		// add friends relations
+		// add friends, couple relations
 		for (int f = 0; f < relations.length; f++) {
+
+			Person Psn1 = getPerson(relations[f][0]);
+			Person Psn2 = getPerson(relations[f][1]);
+
 			if (relations[f][2].toLowerCase().equals("friends")) {
 
-				Person Psn1 = getPerson(relations[f][0]);
-				Person Psn2 = getPerson(relations[f][1]);
-
 				if (Psn1 != null && Psn2 != null) {
-
 					try {
 						Psn1.addedTo(Psn2);
 					} catch (Exception e) {
+						lbSystemInfo.setText(e.getMessage());
 
 					}
 
 				}
+			} else if (relations[f][2].toLowerCase().equals("couple")) {
+				try {
+
+					((Adult) Psn1).setPartner((Adult) Psn2);
+					((Adult) Psn2).setPartner((Adult) Psn1);
+
+				} catch (Exception e) {
+
+					lbSystemInfo.setText(e.getMessage());
+
+				}
+
 			}
 
 		}
-  
 
-		//allProfiles.get(6).viewDetails();
+		// allProfiles.get(6).viewDetails();
 		// topLevelHandler();
 	}
 
@@ -633,7 +399,7 @@ public class Driver extends Application {
 			Adult parent1 = null;
 			Adult parent2 = null;
 
-			if (age < Person.adultMinAge) {
+			if (age < Adult.ADULT_MIN_AGE) {
 
 				for (int s = 0; s < relations.length; s++) {
 
@@ -668,7 +434,7 @@ public class Driver extends Application {
 
 				if (parent1 != null && parent2 != null) {
 
-					Person P = new Dependent(name, age, photo, status, state, sex, new ArrayList<Person>(), parent1,
+					Person P = new Child(name, age, photo, status, state, sex, new ArrayList<Person>(), parent1,
 							parent2);
 					allProfiles.add(P);
 					parent1.addChild(P);
@@ -705,21 +471,6 @@ public class Driver extends Application {
 			}
 		}
 		return null;
-	}
-
-	/*
-	 * this method updates modified Person in the network
-	 */
-	private void updateAllProfilesList(Person P) {
-
-		for (int i = 0; i < allProfiles.size(); i++) {
-
-			if (allProfiles.get(i).getName().toLowerCase().equals(P.getName())) {
-				allProfiles.set(i, P);
-				break;
-			}
-		}
-
 	}
 
 }
